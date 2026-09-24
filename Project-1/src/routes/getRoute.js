@@ -1,7 +1,6 @@
-import Router from 'koa-router';
+import Router from '@koa/router';
 
-import getProducts from '../controller/getProducts.js';
-import getProduct from '../controller/getProduct.js';
+import { getProducts, getProduct } from '../controller/productsController.js';
 
 const router = new Router();
 

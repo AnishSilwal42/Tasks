@@ -17,9 +17,7 @@ export const AppDataSource = new DataSource({
 });
 
 
-AppDataSource.initialize()
-.then(()=>console.log("Connection successful"))
-.catch((error)=>console.log(error));
+
 
 
 // Insert into category
