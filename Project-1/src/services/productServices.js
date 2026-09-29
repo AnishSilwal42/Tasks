@@ -17,10 +17,10 @@ export async function oneProduct(ctx){
 
 export async function allProducts(ctx){
 const Products = AppDataSource.getRepository(Product);
-      const allTuples = await Products.find({
+      const ProductsList = await Products.find({
         relations: {
           Category: true,
         },
       });
-      return allTuples;
+      return ProductsList;
 }
