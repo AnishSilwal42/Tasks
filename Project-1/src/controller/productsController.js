@@ -2,20 +2,20 @@ import {oneProduct, allProducts} from '../services/productServices.js';
 
 export async function getProduct(ctx){
 
-     //find by id
-  const oneTuple = await oneProduct(ctx);
-  if (oneTuple) {
-    ctx.body = oneTuple;
+  //find by id
+  const Product = await oneProduct(ctx);
+  if (Product) {
+    ctx.body = Product;
   } else {
-    ctx.throw(403, "Not found");
+    ctx.throw(404, "Not found");
   }
 }
 
 
 export async function getProducts(ctx){
     {
-      const allTuples = await allProducts(ctx);
+      const Products = await allProducts(ctx);
         ctx.status=200
-        ctx.body = allTuples;
+        ctx.body = Products;
     }
 }
