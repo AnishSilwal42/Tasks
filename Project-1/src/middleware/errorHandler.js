@@ -7,6 +7,7 @@ export default async function errorHandler(ctx,next){
           error: true,
           status: err.status,
           message: err.message || "Internal Server Error",
+          details: err.details || []
         };
       }
 }

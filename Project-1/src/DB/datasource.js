@@ -1,8 +1,6 @@
+import "dotenv/config";
 import { DataSource } from "typeorm";
 
-import Product from "../Entities/product.js";
-import Category from "../Entities/category.js";
-import "dotenv/config";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -12,7 +10,7 @@ export const AppDataSource = new DataSource({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     synchronize:true,
-    entities:[Product,Category],
+    entities:["../Entities/*.js"],
     logging: false
 });
 

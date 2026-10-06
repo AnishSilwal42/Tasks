@@ -1,4 +1,4 @@
-import Router from '@koa/router';
+import Router from "@koa/router"
 
 import { getProducts, getProduct } from '../controller/productsController.js';
 
