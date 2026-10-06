@@ -272,18 +272,6 @@ PORT=3000
 JWT_SECRET=your_jwt_secret_key
 ```
 
-Example:
-
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=user
-DB_NAME=ecommerce
-PORT=3000
-JWT_SECRET=my_secure_secret
-```
-
 ## Installation
 1. Open the project directory.
 2. Install dependencies:
