@@ -20,6 +20,10 @@ export default new EntitySchema({
         role:{
             type:"varchar",
             length: "255"
+        },
+        uuid:{
+            type:"varchar",
+            length: "255"
         }
     }
 });
