@@ -1,30 +1,42 @@
-# Project-1 Backend API
+﻿# Project-1 Backend API
 
-Project-1 is a Node.js backend application built with Koa.js and TypeORM. It connects to PostgreSQL and exposes APIs for product listing and user authentication/management. The project follows a layered backend flow: application startup -> route registration -> controller logic -> service layer -> database access -> response handling.
+Project-1 is a Node.js backend application built with Koa.js, TypeORM, and PostgreSQL. It provides a simple e-commerce-style backend with product listing APIs and user authentication features such as registration, login, and profile retrieval/update.
 
-## Project Purpose
-This project is designed to demonstrate how a real backend API is structured in a small but practical application. It covers:
+The project follows a layered architecture:
 
-- Koa server setup and middleware usage
-- Route-based API design
-- Controller and service separation
-- TypeORM database integration
-- PostgreSQL database configuration
-- JWT-based authentication for authenticated user endpoints
-- Input validation with Zod
-- Error handling for API responses
+- app startup and middleware setup
+- route registration
+- controller handling requests
+- service layer for business logic and database operations
+- TypeORM entities for database mapping
+- JWT-based authentication for protected routes
+
+This project is a practical backend example for learning how a small API is structured, organized, and connected to a relational database.
+
+## Features
+
+- Koa server setup with middleware and route handling
+- PostgreSQL database connection using TypeORM
+- Product API endpoints for listing products and fetching individual products
+- User registration and login endpoints
+- JWT authentication for protected user routes
+- Password hashing using bcryptjs
+- Request validation using Yup
+- Centralized error handling middleware
+- Modular project organization using routes, controllers, services, and entities
 
 ## Tech Stack
+
 - Node.js
 - Koa.js
-- TypeORM
 - PostgreSQL
-- dotenv
+- TypeORM
 - JWT (jsonwebtoken)
 - koa-jwt
 - bcryptjs
-- Zod
+- Yup
 - @koa/router
+- dotenv
 
 ## Project Structure
 
@@ -36,6 +48,7 @@ Project-1/
 │   ├── Entities/
 │   │   ├── category.js
 │   │   ├── product.js
+│   │   ├── role.js
 │   │   └── user.js
 │   ├── controller/
 │   │   ├── productsController.js
@@ -48,7 +61,12 @@ Project-1/
 │   ├── services/
 │   │   ├── productServices.js
 │   │   └── userServices.js
-│   └── app.js
+│   ├── validations/
+│   │   ├── loginValidation.js
+│   │   ├── userUpdateValidation.js
+│   │   └── userValidation.js
+│   ├── app.js
+│   └── ...
 ├── .env
 ├── .gitignore
 ├── package.json
@@ -57,40 +75,30 @@ Project-1/
 └── node_modules/
 ```
 
-## How the Project Works
+## Application Architecture
 
-The application follows a clear backend flow from server startup to database interaction.
+The backend is organized in a standard layered pattern.
 
-### 1. Application startup
-The entry point is `src/app.js`.
+### 1. Server startup
+The application is started in `src/app.js` using a Koa instance.
 
 ```js
 const app = new Koa();
+
 app.use(errorHandler);
 app.use(bodyParser());
+
 app.use(userRouter.routes());
 app.use(userRouter.allowedMethods());
+
 app.use(router.routes());
 app.use(router.allowedMethods());
-
-app.listen(Number(process.env.PORT), () => {
-  AppDataSource.initialize()
-    .then(() => console.log("Connection successful"))
-    .catch((error) => console.log(error));
-});
 ```
 
-What happens here:
+The server listens on the configured port and initializes the TypeORM database connection.
 
-- A Koa application is created.
-- Custom error middleware is attached.
-- Body parser is enabled so JSON request bodies can be read.
-- User routes and product routes are mounted.
-- The app listens on the configured port.
-- TypeORM connection is initialized after the server starts.
-
-### 2. Database connection
-Database setup is handled in `src/DB/datasource.js`.
+### 2. Database configuration
+The TypeORM data source is configured in `src/DB/datasource.js`.
 
 ```js
 export const AppDataSource = new DataSource({
@@ -101,59 +109,53 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   synchronize: true,
-  entities: ["../Entities/*.js"],
+  entities: [path.join(process.cwd(), "src", "Entities", "*.js")],
   logging: false,
 });
 ```
 
-This configures the PostgreSQL connection for the project. The `synchronize: true` option automatically syncs the schema with the project entities, which helps in local development.
+Important notes:
 
-### 3. Entity definitions
-The project has three main database entities:
+- `type: "postgres"` connects the app to PostgreSQL.
+- `synchronize: true` automatically syncs the database schema with the entity definitions.
+- This is useful for local development and learning, but it is not usually recommended for production without careful control.
 
-- `User` in `src/Entities/user.js`
-- `Product` in `src/Entities/product.js`
-- `Category` in `src/Entities/category.js`
-
-#### Product and Category relationship
-In `product.js`, a product belongs to a category:
-
-```js
-relations: {
-  Category: {
-    type: "many-to-one",
-    target: "categories"
-  }
-}
-```
-
-This means each product is linked to one category. The relation is loaded when fetching products using TypeORM with `relations: { Category: true }`.
+### 3. Entity layer
+The database entities live in `src/Entities`.
 
 #### User entity
-The user table contains fields like:
+`src/Entities/user.js`
 
-- email (unique, primary key)
-- passwordHash
-- name
-- role
+- stores user information such as `Id`, `email`, `password`, `name`
+- includes a many-to-one relation with `Role`
+- uses email as a unique field
 
-This is used for authentication and profile management.
+#### Product entity
+`src/Entities/product.js`
+
+- includes product fields such as `id`, `name`, `description`, `stock`, `price`, and `imageURL`
+- includes a many-to-one relation with `Category`
+
+#### Role entity
+`src/Entities/role.js`
+
+- defines user roles
+- has a one-to-many relation with users
 
 ### 4. Route layer
-Routes are defined in:
-
-- `src/routes/productRoute.js`
-- `src/routes/usersRoute.js`
+Routes are organized in `src/routes`.
 
 #### Product routes
+In `src/routes/productRoute.js`:
+
 ```js
 router.get("/products", getProducts);
 router.get("/products/:id", getProduct);
 ```
 
-These endpoints handle listing all products and fetching one product by ID.
-
 #### User routes
+In `src/routes/usersRoute.js`:
+
 ```js
 router.post("/api/auth/register", createUser);
 router.post("/api/auth/login", userLogin);
@@ -161,185 +163,199 @@ router.get("/api/users/me", auth, getUser);
 router.put("/api/users/me", auth, updateUser);
 ```
 
-The user endpoints include JWT authentication for protected user actions.
-
 ### 5. Controller layer
-Controllers receive the Koa request context, validate input where necessary, and call services.
+Controllers handle HTTP requests and pass data to service functions.
 
-#### Product controller
-In `src/controller/productsController.js`:
+Files:
 
-```js
-export async function getProduct(ctx) {
-  const Product = await oneProduct(ctx);
-  if (Product) {
-    ctx.body = Product;
-  } else {
-    ctx.throw(404, "Not found");
-  }
-}
+- `src/controller/productsController.js`
+- `src/controller/userContoller.js`
 
-export async function getProducts(ctx) {
-  const Products = await allProducts(ctx);
-  ctx.status = 200;
-  ctx.body = Products;
-}
-```
+Examples:
 
-#### User controller
-In `src/controller/userContoller.js`:
-
-- `createUser()` validates and registers a new user
-- `userLogin()` checks the user email and password, then issues a JWT
-- `getUser()` returns authenticated user information from `ctx.state.user`
-- `updateUser()` updates a logged-in user profile
+- `createUser()` validates body data and creates a new user
+- `userLogin()` validates credentials, checks the password, and creates a JWT
+- `getUser()` reads the authenticated user from JWT token data
+- `updateUser()` updates the logged-in user's profile
 
 ### 6. Service layer
-The actual database logic is handled in the service files:
+Business logic and database interaction are handled in `src/services`.
 
-- `src/services/productServices.js`
-- `src/services/userServices.js`
+#### User service functions
+- `registerUser(data)`
+- `findUserByEmail(email)`
+- `findUserById(id)`
+- `updateUser(...)`
 
-#### Product service flow
-```js
-const Products = AppDataSource.getRepository(Product);
-const selectedProduct = await Products.findOne({
-  where: { id: ctx.params.id },
-  relations: { Category: true },
-});
-```
+These functions:
 
-This fetches a product by ID and includes its category information.
+- hash passwords before saving
+- check whether a role exists
+- look up users by email or ID
+- update user records safely
 
-#### User service flow
-- Passwords are hashed with `bcryptjs` before storing.
-- User login compares the provided password with the stored hash.
-- JWT is generated using `jsonwebtoken`:
+#### Product service functions
+- `allProducts(ctx)`
+- `oneProduct(ctx)`
 
-```js
-const token = jwt.sign(
-  { email: user.email, name: user.name },
-  process.env.JWT_SECRET,
-  { expiresIn: "2h", algorithm: "HS256" }
-);
-```
+These functions fetch products from the database and can include related category information.
 
-### 7. Authentication flow
-The protected routes use `koa-jwt`:
+### 7. Validation layer
+The project uses Yup validation schemas.
+
+Files:
+
+- `src/validations/userValidation.js`
+- `src/validations/loginValidation.js`
+- `src/validations/userUpdateValidation.js`
+
+Examples:
+
+- registration ensures email is valid and password is provided
+- login ensures required email/password fields exist
+- update profile validates optional fields such as name, email, password, and role
+
+### 8. Authentication flow
+Authentication is performed using `koa-jwt`.
 
 ```js
 const auth = koaJwt({ secret: process.env.JWT_SECRET, algorithms: ["HS256"] });
 ```
 
-This ensures that a valid JWT token is required before a user can access:
+Protected routes include:
 
 - `GET /api/users/me`
 - `PUT /api/users/me`
 
-If the token is missing or invalid, the request is rejected.
+These routes require a valid JWT token in the `Authorization` header.
 
-### 8. Error handling
-The application uses a custom centralized error middleware in `src/middleware/errorHandler.js`.
+### 9. Error handling
+The app includes a custom error handler in `src/middleware/errorHandler.js`.
 
-```js
-export default async function errorHandler(ctx, next) {
-  try {
-    await next();
-  } catch (err) {
-    ctx.status = err.status || 500;
-    ctx.body = {
-      error: true,
-      status: err.status,
-      message: err.message || "Internal Server Error",
-      details: err.details || []
-    };
-  }
-}
-```
+This middleware catches errors thrown by controllers and returns consistent JSON error responses.
 
-This ensures each API error is returned consistently in JSON format.
+## Prerequisites
 
-## Environment Configuration
-Create a `.env` file in the project root:
+Before running the project, make sure you have:
 
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=your_password
-DB_NAME=ecommerce
-PORT=3000
-JWT_SECRET=your_jwt_secret_key
-```
+- Node.js installed
+- PostgreSQL running locally or on a server
+- A database created for the project
+- A valid `.env` file configured
 
 ## Installation
-1. Open the project directory.
-2. Install dependencies:
+
+1. Clone the repository
+2. Open the project folder in your terminal
+3. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Make sure PostgreSQL is running.
-4. Create the database mentioned in `.env`.
-5. Start the project.
+## Environment Configuration
+
+Create a `.env` file in the project root with the following values:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=user
+DB_NAME=ecommerce
+PORT=3000
+JWT_SECRET=your_jwt_secret_key
+```
+
+### Environment variable explanation
+
+- `DB_HOST`: PostgreSQL host
+- `DB_PORT`: PostgreSQL port (default is 5432)
+- `DB_USERNAME`: PostgreSQL user
+- `DB_PASSWORD`: PostgreSQL password
+- `DB_NAME`: database name
+- `PORT`: server port
+- `JWT_SECRET`: secret key used for signing JWTs
 
 ## Running the Project
 
-Use:
+Start the server in development mode:
 
 ```bash
 npm run dev
 ```
 
-This starts the Koa server using `nodemon`, so the app automatically restarts when files change.
+This uses `nodemon` to restart the app automatically when code changes.
+
+## Database Setup
+
+Make sure PostgreSQL is running before starting the application.
+
+Create the database named in the `.env` file, for example:
+
+```sql
+CREATE DATABASE ecommerce;
+```
+
+When the server starts, TypeORM will attempt to sync database tables based on the entity definitions.
 
 ## API Endpoints
 
-### Product APIs
+### Product API
 
 #### Get all products
+
 ```http
 GET /products
 ```
 
 Example:
+
 ```bash
 curl http://localhost:3000/products
 ```
 
-#### Get one product by ID
+#### Get product by ID
+
 ```http
 GET /products/:id
 ```
 
 Example:
+
 ```bash
 curl http://localhost:3000/products/1
 ```
 
-### User Authentication APIs
+### User Authentication API
 
-#### Register a user
+#### Register user
+
 ```http
 POST /api/auth/register
 ```
 
 Request body:
+
 ```json
 {
   "name": "Anish",
   "email": "anish@example.com",
-  "password": "123456"
+  "password": "123456",
+  "role": 1
 }
 ```
 
-#### Login a user
+This route validates the request and creates a new user record.
+
+#### Login user
+
 ```http
 POST /api/auth/login
 ```
 
 Request body:
+
 ```json
 {
   "email": "anish@example.com",
@@ -347,40 +363,105 @@ Request body:
 }
 ```
 
-Response:
+Example response:
+
 ```json
 {
+  "message": "User Logged-In",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 #### Get authenticated user profile
+
 ```http
 GET /api/users/me
 ```
 
 Headers:
+
 ```http
-Authorization: Bearer <token>
+Authorization: Bearer <jwt_token>
+```
+
+Example response:
+
+```json
+{
+  "message": "User Found",
+  "Id": "9f0f8f52-...",
+  "email": "anish@example.com",
+  "name": "Anish",
+  "role": "admin"
+}
 ```
 
 #### Update authenticated user profile
+
 ```http
 PUT /api/users/me
 ```
 
 Headers:
+
 ```http
-Authorization: Bearer <token>
+Authorization: Bearer <jwt_token>
 ```
 
-Request body:
+Request body example:
+
 ```json
 {
   "name": "Anish Silwal",
-  "email": "newemail@example.com"
+  "email": "newemail@example.com",
+  "password": "newpassword123",
+  "role": 2
 }
 ```
+
+Example response:
+
+```json
+{
+  "message": "User Updated",
+  "user": {
+    "Id": "9f0f8f52-...",
+    "email": "newemail@example.com",
+    "name": "Anish Silwal",
+    "Role": {
+      "id": 2,
+      "role": "user"
+    }
+  }
+}
+```
+
+## Validation Rules
+
+### Registration validation
+
+Required fields:
+
+- `name`: minimum 3 characters, maximum 50
+- `email`: valid email format
+- `password`: minimum 5 characters
+- `role`: required number
+
+### Login validation
+
+Required fields:
+
+- `email`: valid email
+- `password`: required
+
+### Update validation
+
+Optional fields:
+
+- `name`: min 3, max 100
+- `email`: valid email format
+- `password`: minimum 5 characters
+- `role`: numeric role ID
 
 ## Example Product Response
 
@@ -401,18 +482,15 @@ Request body:
 ]
 ```
 
-## Example Login Response
-
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
 ## Notes
-- The project uses `synchronize: true`, so TypeORM will auto-sync the database schema with the entity definitions.
-- This is a practical learning project for building a small backend API using Koa and PostgreSQL.
-- The project combines both product management and user authentication in one application, showing how separate routes and service layers can work together.
+
+- The project uses TypeORM with `synchronize: true`, which is helpful for development but should be managed carefully in production.
+- The project is a learning/demo backend and is not a production-hardened service yet.
+- It demonstrates a clean separation of concerns between route handling, controller logic, and database services.
+- Error handling and validation are included, but additional production improvements such as tests, request rate limiting, environment hardening, and role-based authorization can be added.
 
 ## Summary
-Project-1 is a full backend API project built with Koa.js and TypeORM. It starts by creating a server, connecting to PostgreSQL, registering routes, and processing requests through controllers and services. It includes product-related endpoints as well as JWT-protected user authentication and profile APIs, making it a good example of a clean Node.js backend structure.
+
+Project-1 is a small backend API built with Koa.js, TypeORM, and PostgreSQL. It demonstrates how to create and organize a practical API with product endpoints, user authentication, JWT protection, validation, and database integration.
+
+The project is ideal for learning backend structure and how APIs are built in Node.js using a layered architecture.
