@@ -38,7 +38,7 @@ export async function userLogin(ctx) {
     },
   );
   ctx.status = 200;
-  ctx.body = {"message": "User Logged-In", "token":{token}};
+  ctx.body = {"message": "User Logged-In", "token":token};
 }
 
 export async function getUser(ctx) {
@@ -60,6 +60,9 @@ export async function getUser(ctx) {
 
 export async function updateUser(ctx) {
   const validatedData = await userUpdateSchema.validate(ctx.request.body);
+  if(validatedData.data === undefined){
+    ctx.throw(400,"Bad Request");
+  }
   let { email, password, name, role } = validatedData;
   const user = await userServices.updateUser(ctx.state.user.jit, email, password, name, role);
   ctx.status = 200;
