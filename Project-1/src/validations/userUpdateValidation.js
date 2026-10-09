@@ -1,6 +1,6 @@
 import yup from "yup";
 
-const optionalSchema = yup.object({
+const userUpdateSchema = yup.object({
   name: yup
     .string()
     .trim()
@@ -13,11 +13,12 @@ const optionalSchema = yup.object({
     .trim()
     .lowercase()
     .email("Please provide a valid email address.")
+    .min(5)
     .optional(),
 
-  password: yup.string().min(1,"Enter password").optional(),
+  password: yup.string().min(5,"Password should be atleast 5 characters").optional(),
 
-  role: yup.string().min(1, "Enter role").optional(),
+  role: yup.number("Role should be in number").min(1, "Please enter your role").optional(),
 });
 
-export default optionalSchema;
+export default userUpdateSchema;

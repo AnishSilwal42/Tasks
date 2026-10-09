@@ -1,9 +1,9 @@
 import bcrypt, { compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from 'uuid';
+import { v6 as uuidv6 } from 'uuid';
 
 import loginSchema  from "../validations/loginValidation.js";
-import optionalSchema from "../validations/optionalValidation.js"
+import userUpdateSchema from "../validations/userUpdateValidation.js"
 import registrationSchema from "../validations/userValidation.js";
 import * as userServices from "../services/userServices.js";
 
@@ -11,9 +11,11 @@ export async function createUser(ctx) {
   const validatedData = await registrationSchema.validate(ctx.request.body, {
     abortEarly: false,
   });
+  let uuid = uuidv6();
+  validatedData.Id = uuid;
   await userServices.registerUser(validatedData);
   ctx.status = 201;
-  ctx.body = "User created";
+  ctx.body = {"message":"User Created"};
 }
 
 export async function userLogin(ctx) {
@@ -22,48 +24,44 @@ export async function userLogin(ctx) {
   });
   const { email, password } = validatedData;
   const user = await userServices.findUserByEmail(email);
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+  if(!user){
+    ctx.throw(401,"Invalid credentials");
+  }else if(!(await bcrypt.compare(password, user.password))){
     ctx.throw(401, "Unauthorized Error");
   }
-  const uuid = uuidv4();
-  await userServices.saveUuid(email,uuid);
   const token = jwt.sign(
-    { email: user.email, name: user.name, jit: uuid},
+    { email: user.email, name: user.name, jit: user.Id},
     process.env.JWT_SECRET,
     {
       expiresIn: "2h",
       algorithm: "HS256",
     },
   );
-  ctx.body = { token };
+  ctx.status = 200;
+  ctx.body = {"message": "User Logged-In", "token":{token}};
 }
 
 export async function getUser(ctx) {
-  const user = await userServices.findUserByEmail(ctx.state.user.email);
-  if (!user || !(ctx.state.user.jit === user.uuid))
+  const user = await userServices.findUserById(ctx.state.user.jit);
+  if (!user || !(ctx.state.user.jit === user.Id))
   {
     ctx.throw(401,"Unauthorized Error");
   }
+  const {Id,email,name,Role}=user;
+  ctx.status = 200;
   ctx.body = {
-    "email": user.email,
-    "name": user.name,
-    "role": user.role,
-    "uuid": user.uuid
+    message: "User Found",
+    Id,
+    email,
+    name,
+    "role": Role.role
   }
 }
 
 export async function updateUser(ctx) {
-  const validatedData = await optionalSchema.validate(ctx.request.body);
-  const uuid = uuidv4();
+  const validatedData = await userUpdateSchema.validate(ctx.request.body);
   let { email, password, name, role } = validatedData;
-  const user = await userServices.updateUser(ctx.state.user.email, email, password, name, role, uuid);
-  const token = jwt.sign(
-    { email: user.email, name: user.name, jit: user.uuid},
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "2h",
-      algorithm: "HS256",
-    },
-  );
-  ctx.body = {"message":"User Updated", "Token":{token}};
+  const user = await userServices.updateUser(ctx.state.user.jit, email, password, name, role);
+  ctx.status = 200;
+  ctx.body = {"message":"User Updated",user};
 }

@@ -4,20 +4,20 @@ const registrationSchema = yup.object({
   name: yup
     .string()
     .trim()
-    .required()
+    .required("Name is required")
     .min(3, "Name must contain at least 3 characters.")
-    .max(100, "Name cannot exceed 100 characters."),
+    .max(50, "Name cannot exceed 50 characters."),
 
   email: yup
     .string()
     .trim()
     .lowercase()
-    .required()
+    .required("Email is required")
     .email("Please provide a valid email address."),
 
-  password: yup.string().required(),
+  password: yup.string().min(5,"Password should be atleast 5 characters").required("Password is required"),
 
-  role: yup.string().required().min(1, "Enter role"),
+  role: yup.number().required("Role is required")
 });
 
 export default registrationSchema;
