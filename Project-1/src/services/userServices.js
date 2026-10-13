@@ -4,19 +4,13 @@ import User from "../Entities/user.js";
 import Role from "../Entities/role.js";
 import { AppDataSource } from "../DB/datasource.js";
 
+const userRepository = AppDataSource.getRepository(User);
+const roleRepository = AppDataSource.getRepository(Role);
+
 export async function registerUser(data) {
   const { Id, email, password, name, role } = data;
   const hashedPassword = await bcrypt.hash(password, 10);
-  const userRepository = AppDataSource.getRepository(User);
-  const roleRepository = AppDataSource.getRepository(Role);
-  let roleEntity = await roleRepository.findOne({
-      where:{
-        id: role
-      }
-    })
-    if (!roleEntity){
-      throw new Error("Role not found");
-    }
+  isValidRole(role);
   const user = userRepository.create({
     Id,
     email,
@@ -31,7 +25,7 @@ export async function registerUser(data) {
 }
 
 export async function findUserByEmail(email) {
-  const userRepository = AppDataSource.getRepository(User);
+  
   const user = await userRepository.findOne({
     where: {
       email: email,
@@ -47,7 +41,6 @@ export async function findUserByEmail(email) {
 }
 
 export async function findUserById(id) {
-  const userRepository = AppDataSource.getRepository(User);
   const user = await userRepository.findOne({
     where:{
       Id: id
@@ -60,29 +53,13 @@ export async function findUserById(id) {
   return user;
 }
 
-export async function updateUser(key, email, password, name, role) {
-  const userRepository = AppDataSource.getRepository(User);
-  const roleRepository = AppDataSource.getRepository(Role);
-  let user = await userRepository.findOne({
-    where: {
-      Id: key,
-    },
-    relations:{
-      Role: true
-    }
-  });
-  if (email != undefined) {
-    user.email = email;
-  }
-  if (password != undefined) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    user.password= hashedPassword;
-  }
-  if (name != undefined) {
-    user.name = name;
-  }
-  if (role != undefined) {
-    let roleEntity = await roleRepository.findOne({
+export async function updateUser(key, updateDetails) {
+  await userRepository.update({ Id: key }, updateDetails);
+  return findUserById(key);
+}
+
+export async function isValidRole(role) {
+  let roleEntity = await roleRepository.findOne({
       where:{
         id: role
       }
@@ -90,8 +67,5 @@ export async function updateUser(key, email, password, name, role) {
     if (!roleEntity){
       throw new Error("Role not found");
     }
-    user.Role = roleEntity;
-  }
-  await userRepository.update({ Id: key }, user);
-  return user;
+    return true;
 }
