@@ -4,7 +4,7 @@ import koaJwt from "koa-jwt";
 
 const router = new koaRouter();
 
-const auth = koaJwt({ secret: process.env.JWT_SECRET, algorithms: ["HS256"] });
+export const auth = koaJwt({ secret: process.env.JWT_SECRET, algorithms: ["HS256"] });
 
 router.post("/api/auth/register",userContoller.createUser);
 

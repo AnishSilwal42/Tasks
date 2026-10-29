@@ -35,6 +35,9 @@ export async function findUserByEmail(email) {
       password:true,
       name: true,
       Id: true
+    },
+    relations:{
+      Role: true
     }
   });
   return user;

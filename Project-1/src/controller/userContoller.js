@@ -28,7 +28,7 @@ export async function userLogin(ctx) {
     ctx.throw(401, "Unauthorized Error");
   }
   const token = jwt.sign(
-    { email: user.email, name: user.name, jit: user.Id},
+    { email: user.email, name: user.name, jit: user.Id, role: user.Role},
     process.env.JWT_SECRET,
     {
       expiresIn: "2h",
@@ -45,14 +45,10 @@ export async function getUser(ctx) {
   {
     ctx.throw(401,"Unauthorized Error");
   }
-  const {Id,email,name,Role}=user;
   ctx.status = 200;
   ctx.body = {
     message: "User Found",
-    Id,
-    email,
-    name,
-    "role": Role.role
+    user
   }
 }
 
