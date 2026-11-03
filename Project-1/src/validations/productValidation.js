@@ -16,7 +16,11 @@ export const productSchema = yup.object({
 });
 
 export const productCategorySchema = yup.object({
-  name: yup.string("Invalid data-type").required("Category is required"),
+  name: yup
+    .string("Invalid data-type")
+    .trim()
+    .min(2, "Category must contain at least 2 characters")
+    .required("Category is required"),
 });
 
 export const productUpdateSchema = yup.object({

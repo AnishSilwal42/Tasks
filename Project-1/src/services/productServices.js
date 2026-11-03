@@ -49,8 +49,42 @@ export async function addCategory(data) {
   const category = categoryRepository.create({
     name
   })
-  await categoryRepository.save(category);
-  return category;
+  return categoryRepository.save(category);
+}
+
+export async function allCategories() {
+  return categoryRepository.find({
+    order: {
+      id: "ASC",
+    },
+  });
+}
+
+export async function findCategoryById(id) {
+  return categoryRepository.findOne({
+    where: { id },
+  });
+}
+
+export async function updateCategory(id, updateDetails) {
+  const result = await categoryRepository.update({ id }, updateDetails);
+  if (!result.affected) {
+    return null;
+  }
+  return findCategoryById(id);
+}
+
+export async function categoryHasProducts(id) {
+  return productRepository.exist({
+    where: {
+      Category: { id },
+    },
+  });
+}
+
+export async function removeCategory(id) {
+  const result = await categoryRepository.delete({ id });
+  return Boolean(result.affected);
 }
 
 export async function productDetailsUpdate(id, updateDetails) {
