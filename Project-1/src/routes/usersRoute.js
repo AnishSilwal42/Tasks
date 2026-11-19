@@ -1,7 +1,7 @@
 import koaRouter from "@koa/router";
 
 import auth from "../middleware/auth.js"
-import  * as userContoller from "../controller/userContoller.js";
+import  * as userContoller from "../controller/userController.js";
 
 const router = new koaRouter();
 

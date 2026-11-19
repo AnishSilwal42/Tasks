@@ -436,6 +436,54 @@ Example response:
 }
 ```
 
+### Orders API
+
+All order endpoints require `Authorization: Bearer <jwt_token>`.
+
+#### Checkout
+
+```http
+POST /api/orders
+```
+
+Creates an order from the authenticated user's cart, decrements product stock,
+and clears the cart in one transaction. Checkout fails with `409` if stock is
+insufficient.
+
+#### List the current user's orders
+
+```http
+GET /api/orders
+```
+
+#### Get one of the current user's orders
+
+```http
+GET /api/orders/:id
+```
+
+#### Admin: list all orders
+
+```http
+GET /api/orders/admin
+```
+
+#### Admin: update order status
+
+```http
+PATCH /api/orders/admin/:id
+```
+
+Request body:
+
+```json
+{
+  "status": "shipped"
+}
+```
+
+Allowed statuses: `pending`, `paid`, `shipped`, `delivered`, and `cancelled`.
+
 ## Validation Rules
 
 ### Registration validation

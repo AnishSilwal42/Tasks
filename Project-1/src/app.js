@@ -1,8 +1,10 @@
 import Koa from "koa";
 
-import router from "./routes/productRoute.js";
+import productRouter from "./routes/productRoute.js";
 import userRouter from "./routes/usersRoute.js"
 import roleRouter from "./routes/roleRoute.js";
+import cartRouter from "./routes/cartRoute.js";
+import orderRouter from "./routes/orderRoute.js";
 import { AppDataSource } from "./DB/datasource.js";
 import errorHandler from "./middleware/errorHandler.js";
 import bodyParser from "@koa/bodyparser";
@@ -25,8 +27,14 @@ app.use(userRouter.allowedMethods());
 app.use(roleRouter.routes());
 app.use(roleRouter.allowedMethods());
 
-app.use(router.routes());
-app.use(router.allowedMethods());
+app.use(productRouter.routes());
+app.use(productRouter.allowedMethods());
+
+app.use(cartRouter.routes());
+app.use(cartRouter.allowedMethods());
+
+app.use(orderRouter.routes());
+app.use(orderRouter.allowedMethods());
 
 app.use(async (ctx, next) => {
   await next();
