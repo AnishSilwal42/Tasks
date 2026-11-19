@@ -1,9 +1,10 @@
-import bcrypt,{compare} from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v6 as uuidv6 } from 'uuid';
 
 import {registrationSchema,loginSchema,userUpdateSchema} from "../validations/userValidation.js";
 import * as userServices from "../services/userServices.js";
+import { successResponse } from "../utils/apiResponse.js";
 
 export async function createUser(ctx) {
   const validatedData = await registrationSchema.validate(ctx.request.body, {
@@ -13,7 +14,7 @@ export async function createUser(ctx) {
   validatedData.Id = uuid;
   await userServices.registerUser(validatedData);
   ctx.status = 201;
-  ctx.body = {"message":"User Created"};
+  ctx.body = successResponse("User created");
 }
 
 export async function userLogin(ctx) {
@@ -36,7 +37,7 @@ export async function userLogin(ctx) {
     },
   );
   ctx.status = 200;
-  ctx.body = {"message": "User Logged-In", "token":token};
+  ctx.body = successResponse("User logged in", { token });
 }
 
 export async function getUser(ctx) {
@@ -46,10 +47,7 @@ export async function getUser(ctx) {
     ctx.throw(401,"Unauthorized Error");
   }
   ctx.status = 200;
-  ctx.body = {
-    message: "User Found",
-    user
-  }
+  ctx.body = successResponse("User found", user);
 }
 
 export async function updateUser(ctx) {
@@ -76,5 +74,5 @@ export async function updateUser(ctx) {
   }
   const user = await userServices.updateUser(ctx.state.user.jit, updateDetails);
   ctx.status = 200;
-  ctx.body = {"message":"User Updated",user};
+  ctx.body = successResponse("User updated", user);
 }

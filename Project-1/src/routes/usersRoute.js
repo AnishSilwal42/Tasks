@@ -1,10 +1,9 @@
-import  * as userContoller from "../controller/userContoller.js";
 import koaRouter from "@koa/router";
-import koaJwt from "koa-jwt";
+
+import auth from "../middleware/auth.js"
+import  * as userContoller from "../controller/userController.js";
 
 const router = new koaRouter();
-
-export const auth = koaJwt({ secret: process.env.JWT_SECRET, algorithms: ["HS256"] });
 
 router.post("/api/auth/register",userContoller.createUser);
 
